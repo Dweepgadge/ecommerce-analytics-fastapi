@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-Commerce Analytics Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-6 font-sans">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex justify-between items-center border-b border-gray-800 pb-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-blue-400">📊 Data-Driven E-Commerce Dashboard</h1>
+        <p class="text-gray-400 text-sm">Powered by FastAPI, SQLAlchemy & Pandas</p>
+      </div>
+      <div id="authStatus" class="text-sm bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
+        Status: <span class="text-red-400 font-bold" id="userBadge">Not Logged In</span>
+      </div>
+    </header>
+
+    <!-- Top Row: Login & New Order -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- 1. Authentication Card -->
+      <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 space-y-4">
+        <h2 class="text-lg font-bold text-gray-200">🔐 User Authentication (JWT)</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <input id="authUsername" type="text" placeholder="Username" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm">
+          <input id="authPassword" type="password" placeholder="Password" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm">
+        </div>
+        <div class="flex gap-3">
+          <button onclick="registerUser()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm font-semibold">Register</button>
+          <button onclick="loginUser()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 rounded text-sm font-semibold">Login</button>
+        </div>
+        <p id="authMsg" class="text-xs text-gray-400"></p>
+      </div>
+
+      <!-- 2. Create Order Card -->
+      <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 space-y-4">
+        <h2 class="text-lg font-bold text-gray-200">🛒 Create New Order (Protected API)</h2>
+        <div class="grid grid-cols-3 gap-3">
+          <input id="prodName" type="text" placeholder="Product" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm">
+          <input id="prodPrice" type="number" placeholder="Price (₹)" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm">
+          <input id="prodQty" type="number" placeholder="Qty" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm">
+        </div>
+        <button onclick="createOrder()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2 rounded text-sm font-semibold">Submit Order</button>
+        <p id="orderMsg" class="text-xs text-gray-400"></p>
+      </div>
+    </div>
+
+    <!-- Analytics KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+        <p class="text-gray-400 text-xs uppercase">Total Revenue</p>
+        <p id="kpiRevenue" class="text-2xl font-bold text-emerald-400 mt-1">₹0</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+        <p class="text-gray-400 text-xs uppercase">Average Order Value (AOV)</p>
+        <p id="kpiAOV" class="text-2xl font-bold text-blue-400 mt-1">₹0</p>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+        <p class="text-gray-400 text-xs uppercase">Items Sold</p>
+        <p id="kpiItems" class="text-2xl font-bold text-purple-400 mt-1">0</p>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-gray-200">📦 Live Orders Database</h2>
+        <button onclick="fetchOrders()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded">Refresh Data</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+          <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Product</th>
+              <th class="p-3">Price</th>
+              <th class="p-3">Qty</th>
+              <th class="p-3">Total Bill</th>
+              <th class="p-3">Action</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody" class="divide-y divide-gray-700">
+            <!-- Dynamic rows will appear here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: Backend API Calls -->
+  <script>
+    const API_URL = "http://127.0.0.1:8000";
+    let token = localStorage.getItem("jwt_token") || null;
+
+    if (token) {
+      document.getElementById("userBadge").innerText = "Logged In 🔓";
+      document.getElementById("userBadge").className = "text-emerald-400 font-bold";
+    }
+
+    // 1. Register API
+    async function registerUser() {
+      const u = document.getElementById("authUsername").value;
+      const p = document.getElementById("authPassword").value;
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await res.json();
+      document.getElementById("authMsg").innerText = res.ok ? data.message : data.detail;
+    }
+
+    // 2. Login API (Extracts JWT)
+    async function loginUser() {
+      const u = document.getElementById("authUsername").value;
+      const p = document.getElementById("authPassword").value;
+      
+      const formData = new URLSearchParams();
+      formData.append("username", u);
+      formData.append("password", p);
+
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.access_token;
+        localStorage.setItem("jwt_token", token);
+        document.getElementById("userBadge").innerText = `Logged In as ${u} 🔓`;
+        document.getElementById("userBadge").className = "text-emerald-400 font-bold";
+        document.getElementById("authMsg").innerText = "Login Successful!";
+      } else {
+        document.getElementById("authMsg").innerText = data.detail;
+      }
+    }
+
+    // 3. Create Order (Sends Bearer Token)
+    async function createOrder() {
+      if (!token) {
+        alert("Pehle Login karo! (Protected API)");
+        return;
+      }
+      const name = document.getElementById("prodName").value;
+      const price = parseFloat(document.getElementById("prodPrice").value);
+      const qty = parseInt(document.getElementById("prodQty").value);
+
+      const res = await fetch(`${API_URL}/orders/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_name: name, price: price, quantity: qty })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("orderMsg").innerText = "Order Created Successfully!";
+        fetchOrders();
+        fetchAnalytics();
+      } else {
+        document.getElementById("orderMsg").innerText = data.detail || "Error creating order";
+      }
+    }
+
+    // 4. Fetch All Orders
+    async function fetchOrders() {
+      const res = await fetch(`${API_URL}/orders/`);
+      const result = await res.json();
+      const tbody = document.getElementById("ordersTableBody");
+      tbody.innerHTML = "";
+
+      result.data.forEach(order => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-700/50";
+        tr.innerHTML = `
+          <td class="p-3 font-mono text-gray-500">#${order.id}</td>
+          <td class="p-3 font-semibold text-white">${order.product_name}</td>
+          <td class="p-3">₹${order.price}</td>
+          <td class="p-3">${order.quantity}</td>
+          <td class="p-3 font-bold text-emerald-400">₹${order.total_bill}</td>
+          <td class="p-3">
+            <button onclick="deleteOrder(${order.id})" class="text-xs bg-red-900/60 hover:bg-red-700 text-red-200 px-2 py-1 rounded">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 5. Delete Order (Protected)
+    async function deleteOrder(id) {
+      if (!token) {
+        alert("Pehle Login karo!");
+        return;
+      }
+      const res = await fetch(`${API_URL}/orders/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchOrders();
+        fetchAnalytics();
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Delete failed");
+      }
+    }
+
+    // 6. Fetch Analytics (Pandas Route)
+    async function fetchAnalytics() {
+      const res = await fetch(`${API_URL}/analytics/`);
+      const data = await res.json();
+      if (data.total_revenue !== undefined) {
+        document.getElementById("kpiRevenue").innerText = `₹${data.total_revenue.toLocaleString()}`;
+        document.getElementById("kpiAOV").innerText = `₹${data.average_order_value}`;
+        document.getElementById("kpiItems").innerText = data.total_items_sold;
+      }
+    }
+
+    // Initial Load
+    fetchOrders();
+    fetchAnalytics();
+  </script>
+</body>
+</html>
