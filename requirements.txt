@@ -1,8 +1,13 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
+psycopg[binary]
 pydantic
 pandas
+numpy
+scikit-learn
+streamlit
 pyjwt
 bcrypt
-python-multipart
+pytest
+httpx
