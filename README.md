@@ -34,6 +34,7 @@ Live Business Analytics: Embedded Pandas pipeline computing real-time KPIs (Tota
 Automated Testing Suite: 100% passing unit tests using Pytest and FastAPI TestClient covering security, validation, and CRUD operations.
 Interactive ML Dashboard: Built with Streamlit (pure Python) for real-time customer churn prediction and revenue visualization.
 Containerized Deployment: Packaged using a lightweight multi-layer Docker image (python:3.11-slim).
+
 🛠️ Tech Stack
 Backend: Python 3.11+, FastAPI, Pydantic, Uvicorn
 Database: Cloud PostgreSQL (Neon), SQLAlchemy ORM
@@ -41,6 +42,7 @@ Security: PyJWT, Bcrypt, OAuth2 Password Bearer
 Data Processing & ML: Pandas, NumPy, Scikit-learn
 Testing & DevOps: Pytest, HTTPX TestClient, Docker, Git/GitHub
 UI & Dashboards: Streamlit, Tailwind CSS, HTML5
+
 📡 API Endpoints Overview
 Method	Endpoint	Description	Auth Required?
 POST	/register	Register a new user with hashed password	No
