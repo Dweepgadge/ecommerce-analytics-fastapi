@@ -53,3 +53,24 @@ GET	/orders/{id}	Fetch a single order by ID	No
 DELETE	/orders/{id}	Delete an order by ID	Yes (Bearer JWT)
 GET	/analytics/	Compute live revenue and AOV using Pandas	No
 GET	/docs	Interactive Swagger UI API documentation	No
+
+💻 How to Run Locally
+1. Clone the repository
+bash
+git clone https://github.com/Dweepgadge/ecommerce-analytics-fastapi.git
+cd ecommerce-analytics-fastapi
+2. Install dependencies
+bash
+pip install -r requirements.txt
+3. Run the API Server
+bash
+uvicorn main:app --reload
+
+Open interactive Swagger docs at http://127.0.0.1:8000/docs.
+
+4. Run Automated Tests
+bash
+pytest
+5. Run Interactive Streamlit Dashboard
+bash
+streamlit run app_streamlit.py
